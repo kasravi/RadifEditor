@@ -82,6 +82,7 @@ F/4XF/4F/4PG/2 y G/4XF/4PG/2 y XF/4PG/2 y Gy Ncy G2yyyyy</textarea>
 		<p class="click-explanation" style="display:none;">Click on a note to play that note.</p>
         <div style="display:flex;flex-direction:row;">
             <input type="button" id="dwn-btn" value="Download ABC" style="height:2rem;margin-right:3rem; margin-top:1rem" onclick="dwn-btn"/>
+            <input type="button" id="dwn-btn-svg" value="Download Transcription As SVG" style="height:2rem;margin-right:3rem; margin-top:1rem" onclick="dwn-btn-svg"/>
             <div class="midi">MIDI</div>
         </div>
 	</main>
@@ -285,6 +286,9 @@ F/4XF/4F/4PG/2 y G/4XF/4PG/2 y XF/4PG/2 y Gy Ncy G2yyyyy</textarea>
             ['z']],w:15,h:20
     };
 
+    var upbow = {d:[["M",3.7,-5],["l",-3.7,-10.06],["l",1.76,0],["l",2.44,7.1],["l",0.44,1.58],["l",0.02,0],["l",0.46,-1.58],["l",2.6,-7.1],["l",1.68,0],["l",-3.9,10.06],["l",-1.8,0],["z"]]
+        ,w:5,h:10}
+
     function download(filename, text) {
         var element = document.createElement('a');
         element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
@@ -295,11 +299,42 @@ F/4XF/4F/4PG/2 y G/4XF/4PG/2 y XF/4PG/2 y Gy Ncy G2yyyyy</textarea>
        document.body.removeChild(element);
    }
 
+   function download_svg(filename){
+    var serializer = new XMLSerializer();
+    var source = serializer.serializeToString(document.getElementById("paper").children[0])
+
+    if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
+    source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
+    if(!source.match(/^<svg[^>]+"http\:\/\/www\.w3\.org\/1999\/xlink"/)){
+        source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+    }
+
+    //add xml declaration
+    source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
+
+    //convert svg source to URI data scheme.
+    var url = "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(source);
+
+    var element = document.createElement('a');
+        element.setAttribute('href', url);
+        element.setAttribute('download', filename);
+       element.style.display = 'none';
+       document.body.appendChild(element);
+       element.click();
+       document.body.removeChild(element);
+   }
    // Start file download.
    document.getElementById("dwn-btn").addEventListener("click", function(){
         // Generate download of hello.txt file with some content
        var filename = (abc.split("\n").find(f=>f.startsWith("X:"))||"X:Unknown").slice(2)+".abc";
        download(filename, abc);
+   }, false);
+
+   document.getElementById("dwn-btn-svg").addEventListener("click", function(){
+        // Generate download of hello.txt file with some content
+       var filename = (abc.split("\n").find(f=>f.startsWith("X:"))||"X:Unknown").slice(2)+".svg";
+       download_svg(filename);
    }, false);
 
     function setCookie(cname, cvalue) {
@@ -357,6 +392,7 @@ F/4XF/4F/4PG/2 y G/4XF/4PG/2 y XF/4PG/2 y Gy Ncy G2yyyyy</textarea>
         ABCJS.setGlyph('scripts.accflat', accflat);
         ABCJS.setGlyph('scripts.accnatural', accnatural);
         ABCJS.setGlyph('scripts.sokut', sokut);
+        ABCJS.setGlyph('scripts.upbow', upbow);
 
         if (ABCJS.synth.supportsAudio()) {
             synthControl = new ABCJS.synth.SynthController();
